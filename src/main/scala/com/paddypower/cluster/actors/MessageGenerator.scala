@@ -1,6 +1,7 @@
 package com.paddypower.cluster.actors
 
 import akka.actor.{Actor, Props}
+import akka.cluster.sharding.ClusterSharding
 import com.paddypower.cluster.actors.MessageGenerator.Generate
 import com.paddypower.cluster.actors.SharedActor.MessageConsumed
 
@@ -15,19 +16,19 @@ object MessageGenerator {
 
 private[actors] class MessageGenerator extends Actor {
 
-  val sharedActor = context.actorOf(SharedActor.props("dc1"))
+  val sharedRegion = ClusterSharding(context.system).shardRegion(SharedActor.shardName)
 
-  context.system.scheduler.schedule(5 seconds, 3 seconds, self, Generate)
+  context.system.scheduler.schedule(5 seconds, 30 seconds, self, Generate)
 
   def receive: Receive = {
     case Generate =>
-      sharedActor ! randomMessage
+      sharedRegion ! randomMessage(1)
+      sharedRegion ! randomMessage(2)
   }
 
-  private def randomMessage = {
-    val rndKey = ThreadLocalRandom.current().nextInt(1000)
-    val rndValue = ThreadLocalRandom.current().nextInt(5) + 1
-    MessageConsumed(rndKey, (s"key$rndKey" -> (rndKey * rndValue / 2)))
+  private def randomMessage(key: Int) = {
+    val rndValue = ThreadLocalRandom.current().nextInt(1000) + 1
+    MessageConsumed(key, (key * rndValue / 2))
   }
 
 }

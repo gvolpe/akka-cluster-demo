@@ -3,47 +3,54 @@ package com.paddypower.cluster
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{ActorSystem, Address, Props}
 import akka.cluster.Cluster
-import akka.contrib.pattern.ShardCoordinator.LeastShardAllocationStrategy
-import akka.contrib.pattern.{ClusterSharding, ClusterSingletonManager}
+import akka.cluster.sharding.{ClusterShardingSettings, ClusterSharding}
+import akka.cluster.sharding.ShardCoordinator.LeastShardAllocationStrategy
+import akka.cluster.singleton.{ClusterSingletonManagerSettings, ClusterSingletonManager}
 import com.paddypower.cluster.actors.{ProcessorGuardian, SharedActor}
 import com.typesafe.config.ConfigFactory
 
-class AkkaCluster(name: String, port: Int) {
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
+class AkkaCluster(persistentId: String, port: Int) {
+
+  println("AKKA CLUSTER CONSTRUCTOR")
 
   val actorSystem: ActorSystem = {
-    val portConfig =
+    val nodeConfig =
       s""" akka.remote.netty.tcp.port=${port}
-         | akka.cluster.seed-nodes = ["akka.tcp://$name@127.0.0.1:$port"]
        """.stripMargin
-    val config = ConfigFactory.parseString(portConfig).withFallback(ConfigFactory.load())
-    val system = ActorSystem(name, config)
+    val config = ConfigFactory.parseString(nodeConfig).withFallback(ConfigFactory.load())
+    val system = ActorSystem("KlasterSystem", config)
 
     ClusterSharding(system).start(
-      typeName = name,
-      entryProps = Some(SharedActor.props("shared-dc1")),
-      idExtractor = SharedActor.idExtractor,
-      shardResolver = SharedActor.shardResolver,
-      allocationStrategy = new LeastShardAllocationStrategy(2, 1)
+      typeName = "Klaster",
+      entityProps = SharedActor.props(persistentId),
+      settings = ClusterShardingSettings(system),
+      extractEntityId = SharedActor.idExtractor,
+      extractShardId = SharedActor.shardResolver,
+      allocationStrategy = new LeastShardAllocationStrategy(2, 2),
+      handOffStopMessage = Stop
     )
 
-    system.actorOf(ClusterSingletonManager.props(
-      singletonProps = ProcessorGuardian.props,
-      singletonName = s"processorGuardian-$name",
-      terminationMessage = Stop,
-      role = Some("processor")
-    ))
+//    system.actorOf(ClusterSingletonManager.props(
+//      singletonProps = ProcessorGuardian.props,
+//      terminationMessage = Stop,
+//      settings = ClusterSingletonManagerSettings(system)
+//    ))
 
     system
   }
 
   def actor(props: Props) = actorSystem.actorOf(props)
 
-  def awaitTermination = actorSystem.awaitTermination()
+  def awaitTermination = Await.result(actorSystem.whenTerminated, 1000 seconds)
 
   def leaveCluster = {
-    val address = Address("akka.tcp", name, "127.0.0.1", port)
-    Cluster(actorSystem).leave(address)
-    Cluster(actorSystem).down(address)
+    val address = Address("akka.tcp", persistentId, "127.0.0.1", port)
+    val cluster = Cluster(actorSystem)
+    cluster.leave(address)
+    cluster.down(address)
   }
 
 }

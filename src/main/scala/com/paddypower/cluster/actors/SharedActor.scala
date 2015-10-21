@@ -3,29 +3,43 @@ package com.paddypower.cluster.actors
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{ActorLogging, Props}
 import akka.cluster.Cluster
-import akka.contrib.pattern.ShardRegion
+import akka.cluster.sharding.ShardRegion
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
 import com.paddypower.cluster.actors.SharedActor.{MessageConsumed, ProcessingState}
 
 import scala.collection.immutable.SortedMap
 
 object SharedActor {
-  def props(name: String) = Props(new SharedActor(name))
 
-  val idExtractor: ShardRegion.IdExtractor = {
-    case messageConsumed: MessageConsumed => (idFromKey(messageConsumed.key), messageConsumed)
-  }
-  val shardResolver: ShardRegion.ShardResolver = {
-    case messageConsumed: MessageConsumed => (math.abs(idFromKey(messageConsumed.key).hashCode) % 100).toString
-  }
+  def props(id: String) = Props(new SharedActor(id))
 
-  case class MessageConsumed(seqNo: Int, key: CorrelationKey)
+  val idExtractor: ShardRegion.ExtractEntityId = {
+    case messageConsumed: MessageConsumed => (messageConsumed.seqNo.toString, messageConsumed)
+  }
+  val shardResolver: ShardRegion.ExtractShardId = {
+    case messageConsumed: MessageConsumed => {
+      val resolver = s"R${messageConsumed.seqNo}"
+      println(s"RESOLVER: $resolver")
+      resolver
+    } //(math.abs(idFromKey(messageConsumed.key).hashCode) % 100).toString
+  }
+  val shardName = "Klaster"
+
+  case class MessageConsumed(seqNo: Int, key: Int)
   private[actors] case class ProcessingState(processing: SortedMap[Int, MessageConsumed])
-
-  private[this] def idFromKey(key: CorrelationKey): String = s"${key._1}.${key._2}"
 }
 
-private[actors] class SharedActor(name: String) extends PersistentActor with ActorLogging {
+private[actors] class SharedActor(id: String) extends PersistentActor with ActorLogging {
+
+  log.info(s"CONSTRUCTOR: $id")
+
+  override def preStart(): Unit = {
+    log.info(s"PRE START $id")
+  }
+
+  override def postStop(): Unit = {
+    log.info(s"POST STOP $id")
+  }
 
   var processingState: SortedMap[Int, MessageConsumed] = SortedMap.empty
 
@@ -36,6 +50,8 @@ private[actors] class SharedActor(name: String) extends PersistentActor with Act
       processingState = snapshot.processing
     case RecoveryCompleted =>
       log.info(s"Recovery Completed: ${processingState}")
+    case Stop =>
+      log.info(s"Stopping actor $id")
   }
 
   override def receiveCommand: Receive = {
@@ -44,7 +60,7 @@ private[actors] class SharedActor(name: String) extends PersistentActor with Act
     case _ => println("Unknown Command")
   }
 
-  override def persistenceId: String = s"shared-${name}"
+  override def persistenceId: String = s"shared-$id"
 
   private def updateState(msg: MessageConsumed): Unit = {
     processingState += msg.seqNo -> msg

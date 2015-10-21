@@ -18,7 +18,7 @@ private[actors] class MessageGenerator extends Actor {
 
   val sharedRegion = ClusterSharding(context.system).shardRegion(SharedActor.shardName)
 
-  context.system.scheduler.schedule(5 seconds, 30 seconds, self, Generate)
+  context.system.scheduler.schedule(5 seconds, 60 seconds, self, Generate)
 
   def receive: Receive = {
     case Generate =>

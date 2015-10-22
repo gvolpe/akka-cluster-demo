@@ -1,6 +1,6 @@
-package com.paddypower.cluster
+package com.gvolpe.cluster
 
-import com.paddypower.cluster.actors.MessageGenerator
+import com.gvolpe.cluster.actors.MessageGenerator
 
 object Dc1Cluster extends App {
 

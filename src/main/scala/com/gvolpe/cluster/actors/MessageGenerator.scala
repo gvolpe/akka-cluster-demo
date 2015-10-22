@@ -1,9 +1,9 @@
-package com.paddypower.cluster.actors
+package com.gvolpe.cluster.actors
 
 import akka.actor.{Actor, Props}
 import akka.cluster.sharding.ClusterSharding
-import com.paddypower.cluster.actors.MessageGenerator.Generate
-import com.paddypower.cluster.actors.SharedActor.MessageConsumed
+import com.gvolpe.cluster.actors.MessageGenerator.Generate
+import com.gvolpe.cluster.actors.SharedActor.MessageConsumed
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._

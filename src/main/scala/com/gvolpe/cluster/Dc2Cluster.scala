@@ -1,4 +1,4 @@
-package com.paddypower.cluster
+package com.gvolpe.cluster
 
 object Dc2Cluster extends App {
 

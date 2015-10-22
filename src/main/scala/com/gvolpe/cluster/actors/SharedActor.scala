@@ -1,11 +1,11 @@
-package com.paddypower.cluster.actors
+package com.gvolpe.cluster.actors
 
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{ActorLogging, Props}
 import akka.cluster.Cluster
 import akka.cluster.sharding.ShardRegion
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
-import com.paddypower.cluster.actors.SharedActor.{MessageConsumed, ProcessingState}
+import com.gvolpe.cluster.actors.SharedActor.{ProcessingState, MessageConsumed}
 
 import scala.collection.immutable.SortedMap
 

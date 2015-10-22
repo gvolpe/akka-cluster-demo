@@ -1,12 +1,11 @@
-package com.paddypower.cluster
+package com.gvolpe.cluster
 
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{ActorSystem, Address, Props}
 import akka.cluster.Cluster
-import akka.cluster.sharding.{ClusterShardingSettings, ClusterSharding}
 import akka.cluster.sharding.ShardCoordinator.LeastShardAllocationStrategy
-import akka.cluster.singleton.{ClusterSingletonManagerSettings, ClusterSingletonManager}
-import com.paddypower.cluster.actors.{ProcessorGuardian, SharedActor}
+import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
+import com.gvolpe.cluster.actors.SharedActor
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Await

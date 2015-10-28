@@ -5,7 +5,7 @@ import akka.actor.{ActorSystem, Address, Props}
 import akka.cluster.Cluster
 import akka.cluster.sharding.ShardCoordinator.LeastShardAllocationStrategy
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
-import com.gvolpe.cluster.actors.SharedActor
+import com.gvolpe.cluster.actors.EntityActor
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Await
@@ -24,19 +24,13 @@ class AkkaCluster(persistentId: String, port: Int) {
 
     ClusterSharding(system).start(
       typeName = "Klaster",
-      entityProps = SharedActor.props(persistentId),
+      entityProps = EntityActor.props(persistentId),
       settings = ClusterShardingSettings(system),
-      extractEntityId = SharedActor.idExtractor,
-      extractShardId = SharedActor.shardResolver,
+      extractEntityId = EntityActor.idExtractor,
+      extractShardId = EntityActor.shardResolver,
       allocationStrategy = new LeastShardAllocationStrategy(2, 2),
       handOffStopMessage = Stop
     )
-
-//    system.actorOf(ClusterSingletonManager.props(
-//      singletonProps = ProcessorGuardian.props,
-//      terminationMessage = Stop,
-//      settings = ClusterSingletonManagerSettings(system)
-//    ))
 
     system
   }

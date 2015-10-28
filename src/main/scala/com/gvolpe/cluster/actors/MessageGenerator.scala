@@ -3,7 +3,7 @@ package com.gvolpe.cluster.actors
 import akka.actor.{Actor, Props}
 import akka.cluster.sharding.ClusterSharding
 import com.gvolpe.cluster.actors.MessageGenerator.Generate
-import com.gvolpe.cluster.actors.SharedActor.MessageConsumed
+import com.gvolpe.cluster.actors.EntityActor.Message
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -16,7 +16,7 @@ object MessageGenerator {
 
 private[actors] class MessageGenerator extends Actor {
 
-  val sharedRegion = ClusterSharding(context.system).shardRegion(SharedActor.shardName)
+  val sharedRegion = ClusterSharding(context.system).shardRegion(EntityActor.shardName)
 
   context.system.scheduler.schedule(5 seconds, 60 seconds, self, Generate)
 
@@ -28,7 +28,7 @@ private[actors] class MessageGenerator extends Actor {
 
   private def randomMessage(key: Int) = {
     val rndValue = ThreadLocalRandom.current().nextInt(1000) + 1
-    MessageConsumed(key, (key * rndValue / 2))
+    Message(key, (key * rndValue / 2))
   }
 
 }

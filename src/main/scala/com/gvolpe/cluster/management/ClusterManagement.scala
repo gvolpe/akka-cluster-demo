@@ -1,7 +1,9 @@
 package com.gvolpe.cluster.management
 
-import akka.actor.{ActorSystem, Address}
+import akka.actor.ActorSystem
 import akka.cluster.Cluster
+import akka.cluster.sharding.{ClusterSharding, ShardRegion}
+import com.gvolpe.cluster.actors.EntityActor
 
 class ClusterManagement(system: ActorSystem, port: Int) extends ClusterManagementMBean {
 
@@ -9,14 +11,14 @@ class ClusterManagement(system: ActorSystem, port: Int) extends ClusterManagemen
 
     println(s"INVOKING MBEAN ${system.name}")
 
-    val address: Address = Address("akka.tcp", system.name,
-      system.settings.config.getString("akka.remote.netty.tcp.hostname"), port)
+    val cluster = Cluster(system)
+    val region = ClusterSharding(system).shardRegion(EntityActor.shardName)
 
-    println(s"MBEAN ADDRESS >> ${address}")
+    region ! ShardRegion.GracefulShutdown
 
-    Cluster(system).leave(address)
-    Cluster(system).down(address)
-    system.terminate()
+//    Cluster(system).leave(address)
+//    Cluster(system).down(address)
+//    system.terminate()
   }
 
 }

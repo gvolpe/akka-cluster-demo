@@ -1,11 +1,15 @@
 package com.gvolpe.cluster
 
+import java.lang.management.ManagementFactory
+import javax.management.ObjectName
+
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{ActorSystem, Address, Props}
 import akka.cluster.Cluster
 import akka.cluster.sharding.ShardCoordinator.LeastShardAllocationStrategy
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
 import com.gvolpe.cluster.actors.EntityActor
+import com.gvolpe.cluster.management.ClusterManagement
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Await
@@ -32,7 +36,15 @@ class AkkaCluster(persistentId: String, port: Int) {
       handOffStopMessage = Stop
     )
 
+    registerClusterManagementBean(system)
+
     system
+  }
+
+  def registerClusterManagementBean(system: ActorSystem): Unit = {
+    val mbeanServer = ManagementFactory.getPlatformMBeanServer()
+    val clusterMgmtMBeanName = new ObjectName("KlasterDemo:name=ClusterManagement")
+    mbeanServer.registerMBean(new ClusterManagement(system, port), clusterMgmtMBeanName)
   }
 
   def actor(props: Props) = actorSystem.actorOf(props)

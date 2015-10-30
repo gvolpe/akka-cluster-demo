@@ -1,11 +1,11 @@
 package com.gvolpe.cluster.actors
 
 import akka.actor.SupervisorStrategy.Stop
-import akka.actor.{Terminated, ActorLogging, Props}
+import akka.actor.{ActorLogging, Props}
 import akka.cluster.Cluster
-import akka.cluster.sharding.{ClusterSharding, ShardRegion}
+import akka.cluster.sharding.ShardRegion
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
-import com.gvolpe.cluster.actors.EntityActor.{ProcessingState, Message}
+import com.gvolpe.cluster.actors.EntityActor.{Message, ProcessingState}
 
 import scala.collection.immutable.SortedMap
 
@@ -30,11 +30,6 @@ object EntityActor {
 }
 
 private[actors] class EntityActor(id: String) extends PersistentActor with ActorLogging {
-
-  val cluster = Cluster(context.system)
-  val region = ClusterSharding(context.system).shardRegion(EntityActor.shardName)
-
-  context.watch(region)
 
   log.info(s"CONSTRUCTOR: $id")
 
@@ -62,10 +57,6 @@ private[actors] class EntityActor(id: String) extends PersistentActor with Actor
   override def receiveCommand: Receive = {
     case msg: Message => persist(msg)(updateState)
     case Stop => context.stop(self)
-    case Terminated(`region`) ⇒
-      log.info("NODE Terminated")
-      cluster.registerOnMemberRemoved(context.system.terminate())
-      cluster.leave(cluster.selfAddress)
     case _ => println("Unknown Command")
   }
 

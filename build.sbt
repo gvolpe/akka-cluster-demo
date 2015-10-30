@@ -7,7 +7,8 @@ scalaVersion := "2.11.7"
 val akkaVersion = "2.4.0"
 
 resolvers ++= Seq(
-  "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven"
+  "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven",
+  "PP repository" at "http://artifactory.cmdb.inhouse.paddypower.com:8081/artifactory/plugins-release"
 )
 
 libraryDependencies ++= Seq(

@@ -34,6 +34,8 @@ private[actors] class EntityActor(id: String) extends PersistentActor with Actor
   val cluster = Cluster(context.system)
   val region = ClusterSharding(context.system).shardRegion(EntityActor.shardName)
 
+  context.watch(region)
+
   log.info(s"CONSTRUCTOR: $id")
 
   override def preStart(): Unit = {
@@ -61,6 +63,7 @@ private[actors] class EntityActor(id: String) extends PersistentActor with Actor
     case msg: Message => persist(msg)(updateState)
     case Stop => context.stop(self)
     case Terminated(`region`) ⇒
+      log.info("NODE Terminated")
       cluster.registerOnMemberRemoved(context.system.terminate())
       cluster.leave(cluster.selfAddress)
     case _ => println("Unknown Command")

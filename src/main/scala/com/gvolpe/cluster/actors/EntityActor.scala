@@ -6,6 +6,7 @@ import akka.cluster.Cluster
 import akka.cluster.sharding.ShardRegion
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
 import com.gvolpe.cluster.actors.EntityActor.{Message, ProcessingState}
+import com.gvolpe.cluster.actors.MessageGenerator.Ack
 
 import scala.collection.immutable.SortedMap
 
@@ -66,6 +67,7 @@ private[actors] class EntityActor(id: String) extends PersistentActor with Actor
     processingState += msg.seqNo -> msg
     log.info(s"Updating state: ${processingState}")
     log.info(s"Cluster State: ${Cluster(context.system).state}")
+    sender() ! Ack(id, msg.key)
   }
 
 }

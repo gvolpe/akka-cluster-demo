@@ -4,7 +4,7 @@ version := "1.0"
 
 scalaVersion := "2.11.7"
 
-val akkaVersion = "2.4.0"
+val akkaVersion = "2.4.1"
 
 resolvers ++= Seq(
   "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven"
@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
   "com.typesafe.akka" %% "akka-cluster-sharding" % akkaVersion,
-  "com.typesafe.akka" % "akka-cluster-metrics" % akkaVersion,
+  "com.typesafe.akka" %% "akka-cluster-metrics" % akkaVersion,
   "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
   "com.github.krasserm" %% "akka-persistence-cassandra" % "0.4",
   "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.6",
